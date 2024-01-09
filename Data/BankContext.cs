@@ -24,7 +24,6 @@ namespace BankAPI.Data
         public virtual DbSet<Client> Clients { get; set; } = null!;
         public virtual DbSet<TransactionType> TransactionTypes { get; set; } = null!;
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Account>(entity =>
@@ -142,6 +141,10 @@ namespace BankAPI.Data
 
                 entity.Property(e => e.PhoneNumber)
                     .HasMaxLength(40)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Pwd)
+                    .HasMaxLength(8)
                     .IsUnicode(false);
 
                 entity.Property(e => e.RegDate)

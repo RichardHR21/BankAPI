@@ -24,25 +24,57 @@ public class LoginController : ControllerBase
     }
 
     [HttpPost("authenticate")]
-    public async Task<IActionResult> Login(AdminDto adminDto)
+    public async Task<IActionResult> Login(UserDto userDto)
     {
-        var admin = await loginService.GetAdmin(adminDto);
+        var user = await loginService.GetUser(userDto);
+        var admin = await loginService.GetAdmin(userDto);
+        
 
-        if (admin is null)
+        if (admin is null && user is null)
             return BadRequest(new { message = "Credenciales inválidas."});
 
-        string jwtToken = GenerateToken(admin);
+        if(admin is null){
+        #pragma warning disable CS8604 // Possible null reference argument.
+            string jwtToken = GenerateTokenUser(user);
+            return Ok( new { message = $"Bienvenido {user.Name}", token = jwtToken});}
+        #pragma warning restore CS8604 // Possible null reference argument.
+        else
+        {
+            string jwtToken = GenerateTokenAdmin(admin);
+            return Ok( new { message = $"Bienvenido {admin.Name}", token = jwtToken});
+        }
 
-        return Ok( new { token = jwtToken});
+        
     }
 
-    private string GenerateToken(Administrator admin)
+    private string GenerateTokenAdmin(Administrator admin)
     {
          var claims = new[]
          {
             new Claim(ClaimTypes.Name, admin.Name),
             new Claim(ClaimTypes.Email, admin.Email),
             new Claim("AdminType", admin.AdminType)
+         };
+
+         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection("JWT:Key").Value));
+         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+         var securityToken = new JwtSecurityToken(
+                            claims: claims,
+                            expires: DateTime.Now. AddMinutes(60),
+                            signingCredentials: creds);
+
+        string token = new JwtSecurityTokenHandler().WriteToken(securityToken);
+
+        return token;
+    }
+
+    private string GenerateTokenUser(Client user)
+    {
+         var claims = new[]
+         {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
          };
 
          var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection("JWT:Key").Value));

@@ -13,9 +13,15 @@ public class LoginService
         _context = context;
     }
 
-    public async Task<Administrator?> GetAdmin(AdminDto admin)
+    public async Task<Administrator?> GetAdmin(UserDto user)
     {
         return await _context.Administrators.
-                    SingleOrDefaultAsync(x => x.Email == admin.Email && x.Pwd == admin.Pwd);
+                    SingleOrDefaultAsync(x => x.Email == user.Email && x.Pwd == user.Pwd);
+    }
+
+    public async Task<Client?> GetUser(UserDto user)
+    {
+        return await _context.Clients.
+                    SingleOrDefaultAsync(x => x.Email == user.Email && x.Pwd == user.Pwd);
     }
 }
